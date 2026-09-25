@@ -1,0 +1,17 @@
+{
+  "skill_name": "algo-build-loop",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I have a design plan at rate-limiter-design/plan.md (token bucket per customer plus a shared fair-share bucket, Python, pytest). Implement the PoC from it — milestone by milestone, with tests.",
+      "expected_output": "A feat/ branch with several small commits (build/test setup, token bucket plus tests, fair-share logic plus tests, review-fix commits), each building and passing on its own; a build-log.md with milestones, acceptance checks and current state; review-log entries with verdict blocks from fresh reviewers; a published (or saved) HTML artifact walking through the commits, verification results and plan deviations. Nothing committed on main, nothing pushed.",
+      "files": ["rate-limiter-design/plan.md"]
+    },
+    {
+      "id": 2,
+      "prompt": "continue building the short-video recsys PoC from short-content-recsys-design/plan.md — start with the assembly (ILP) milestone since that's the least-reviewed part",
+      "expected_output": "Reads the plan (and the build log, if one exists), creates or reuses a feature branch, researches the scipy milp/HiGHS API before coding, implements the Steps 13–18 assembly with property tests (monotonicity, always feasible, bound met or slack reported), commits in small logical steps, runs a fresh-reviewer round, and presents a change artifact at the end.",
+      "files": ["short-content-recsys-design/plan.md"]
+    }
+  ]
+}
