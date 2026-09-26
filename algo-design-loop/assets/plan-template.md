@@ -34,6 +34,16 @@ _If any of these are assumptions rather than user-stated facts, mark them "(assu
 2. {{Step}}
 3. {{...}}
 
+## Verification
+
+| Step | The check that would fail if this step were wrong | New tests needed |
+|---|---|---|
+| 1 | {{test / command / observable result}} | {{property test, brute-force comparison, regression test, or "existing: <name>"}} |
+
+## Guardrail impact
+
+{{"None." — or each step that changes the repo's own checks (judge, lint/test config, hooks, CI, agent settings), why it's needed, and "for a human to apply": the repo's judge can't vouch for a change to itself, so these never become agent PRs.}}
+
 ## Known Risks / Open Questions
 
 - {{Anything you flagged yourself before the reviewer even sees it.}}
