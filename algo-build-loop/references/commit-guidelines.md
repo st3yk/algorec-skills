@@ -30,6 +30,11 @@ deviation from the plan and where it is recorded.>
   - `test(assembly): property test that the bound tightens monotonically in |s|`
   - `fix(retrieval): exclude in-flight video IDs from every source`
 
+## Checked, not assumed
+- Commit only what you tested. A formatter or fix-up run after the tests can leave the committed file different from the one that passed; re-run the checks, or let the repo's gate judge the commit itself.
+- If the repo's conventions tie code to a docs page, change the page in the same commit.
+
 ## Branch
 - Work on `feat/<task-slug>` created from the base branch. Never commit to the base branch.
-- Pushing, opening a PR and merging are outward-facing; do them only when the user asks.
+- Never push, open, ready, edit or merge a PR directly. If the repo declares an `open-pr` door, it is the only route to GitHub, and only once the judge says the branch is ready. Otherwise push and open a PR only when the user asks. Only the user merges.
+- Reword commit messages only on unpushed commits, with a scripted, messages-only rewrite, and remap any hashes the logs cite.

@@ -1,7 +1,7 @@
 ---
 name: algo-design-loop
-description: "Use this skill when the user wants a rigorously vetted implementation plan for an algorithm or ML-system design task, especially when they say they know little about the domain and want to learn while designing, or explicitly ask for a design to be stress-tested, adversarially reviewed, or iterated until solid. Runs a research -> plan -> adversarial-critique loop: research current best practices and viable approaches, draft a step-by-step implementation plan with rationale, send it to a fresh-context reviewer subagent that hunts for flaws (wrong assumptions, missing edge cases, scalability gaps, correctness issues, gaps vs current best practice), apply the fixes, and repeat until only nitpicks remain. Trigger on: 'help me design an algorithm/system for X and I don't know much about it', 'give me an implementation plan for X', 'research the best approach for X', 'stress-test this design', 'adversarially review my plan', 'find flaws in this approach', 'poke holes in this before I build it', 'iterate on this design until it's solid'. Also trigger any time the user is about to commit to a from-scratch algorithm or ML-system design where getting the approach right matters more than getting an answer fast. Do NOT use it for quick single-shot code generation, for reviewing existing production code (use code-review instead), or for tasks with no real design space (the approach is fixed, or there is obviously only one sane option)."
-version: 0.1.0
+description: "Use this skill when the user wants a rigorously vetted implementation plan for an algorithm or ML-system design task, especially when they say they know little about the domain and want to learn while designing, or explicitly ask for a design to be stress-tested, adversarially reviewed, or iterated until solid. Runs a research -> plan -> adversarial-critique loop: research current best practices and viable approaches, draft a step-by-step implementation plan with rationale, send it to a fresh-context reviewer subagent that hunts for flaws (wrong assumptions, missing edge cases, scalability gaps, correctness issues, gaps vs current best practice), apply the fixes, and repeat until only nitpicks remain. Trigger on: 'help me design an algorithm/system for X and I don't know much about it', 'give me an implementation plan for X', 'research the best approach for X', 'stress-test this design', 'adversarially review my plan', 'find flaws in this approach', 'poke holes in this before I build it', 'iterate on this design until it's solid'. Also trigger any time the user is about to commit to a from-scratch algorithm or ML-system design where getting the approach right matters more than getting an answer fast. When the repo declares an agent-workflow contract, the vetted plan is handed off to an unattended algo-build-loop run. Do NOT use it for quick single-shot code generation, for reviewing existing production code (use code-review instead), or for tasks with no real design space (the approach is fixed, or there is obviously only one sane option)."
+version: 0.2.0
 ---
 
 # Algorithm Design Loop
@@ -23,7 +23,13 @@ Check whether the user's request already answers these; if not, ask (batch it in
 
 If the user explicitly says they don't know and want you to figure it out (as in "I know very little about this"), don't ask them to specify constraints they can't specify — instead state your assumed constraints plainly in the plan's "Constraints" section and flag them as assumptions, so the adversarial reviewer (and the user) can challenge them.
 
-Also settle the output location now: default to a new directory `./<task-slug>-design/` in the current working directory, containing `plan.md` and `review-log.md`. Tell the user where you're writing and let them redirect you.
+**Read the repo, if you're in one.**
+- Look for an "Agent workflow" section in `AGENTS.md` (or `CLAUDE.md`). It may declare `design-dir` (where plans live), `start-build` (the hand-off to a build), and the judge commands (`verify-fast`, `verify`).
+- Read the repo's product promises (`NORTH_STAR.md` or equivalent). They go into the plan's "Constraints" as hard constraints, and into every reviewer prompt. A plan that breaks one is a blocker, not a trade-off.
+
+Also settle the output location now: `design-dir` with the task's slug (for example `design/<slug>/`) when the repo declares one, and otherwise a new directory `./<task-slug>-design/`. It holds `plan.md` and `review-log.md`. Tell the user where you're writing and let them redirect you.
+
+If the repo declares `start-build`, ask in the same batch of questions whether to hand the finished plan straight to a build. The default is yes; "stop after the plan" is the gate option.
 
 ## Step 1 — Research and draft (main context)
 
@@ -31,7 +37,9 @@ Do this yourself, in this conversation — it benefits from the user's presence 
 
 1. Research the problem space: use web search to find how this problem is actually solved in practice, not just textbook theory. For an algorithm/ML design task, that usually means: what do real production systems do (look for engineering blog posts, papers, conference talks from companies operating at the relevant scale), what are the 2-4 genuinely viable approaches, and what are their tradeoffs for *this* user's constraints from Step 0.
 2. Pick an approach and justify it against the alternatives — don't just present the option you liked first. A plan that doesn't say "I considered X and rejected it because Y" reads as if no options were considered at all, and the adversarial reviewer will (correctly) treat unexplained choices as unjustified ones.
-3. Write the plan to `<task-slug>-design/plan.md` using `assets/plan-template.md` as the starting structure. Keep the implementation plan itself simple and step-by-step, per the user's request — the rationale and options-considered sections can carry the nuance so the step list stays actionable.
+3. Write the plan to the output location's `plan.md` using `assets/plan-template.md` as the starting structure. Keep the implementation plan itself simple and step-by-step, per the user's request — the rationale and options-considered sections can carry the nuance so the step list stays actionable.
+4. Fill in the plan's **Verification** section: for each step, the test or check that would fail if the step were implemented wrong, and the new tests it needs (property tests for guarantees, brute-force comparisons on small inputs for optimizers, regression tests for known bugs). The build loop turns these into acceptance checks, and the reviewer judges whether they'd actually catch a wrong implementation.
+5. Fill in the plan's **Guardrail impact** section: any step that changes the repo's own checks (the judge, lint or test configuration, hooks, CI workflows, agent settings). The repo's judge can't vouch for a change to itself, so such a step can't become an agent PR. Isolate it into its own step, marked for a human to apply, or find a design that doesn't need it.
 
 ## Step 2 — Adversarial review (fresh subagent)
 
@@ -45,6 +53,9 @@ You are an adversarial technical reviewer. You have no context beyond what's bel
 PROBLEM & CONSTRAINTS:
 {{problem statement and constraints from Step 0}}
 
+PRODUCT PROMISES THAT MUST HOLD (hard constraints):
+{{pasted from the repo's NORTH_STAR.md or equivalent, or "none: not in a repo"}}
+
 CANDIDATE IMPLEMENTATION PLAN (round {{N}}):
 {{full current contents of plan.md}}
 
@@ -54,6 +65,8 @@ Your job is to find real flaws, not to be agreeable. For each issue, check:
 - Scalability or latency problems the plan doesn't address.
 - Correctness problems: does each step actually achieve what it claims to?
 - Gaps versus current best practice: is there a known better approach for this exact constraint set that the plan ignores?
+- Verification: does every step have a test or check that would fail if it were implemented wrong? A step whose only check is "it runs" is unverified.
+- Promises and guardrails: does any step weaken a product promise, or change the repo's own checks without saying so under "Guardrail impact"?
 If you're unsure whether something reflects current practice, use web search to check rather than guessing.
 
 Rate every finding's severity using this rubric (full definitions in the reviewer's judgment, but calibrate against these examples):
@@ -91,6 +104,16 @@ Track round count with whatever task-tracking is available to you — it's easy 
 ## Step 4 — Finalize
 
 Write the finished `plan.md` and `review-log.md`, then tell the user, in the conversation, in 3-5 sentences: what approach was chosen and why, how many rounds it took, and the single most significant thing the adversarial review changed (this is usually the most convincing evidence to the user that the process was worth running, more than the round count itself). Point them at the two files rather than pasting the whole plan into chat.
+
+## Step 5 — Hand off to the build (repos with `start-build`)
+
+If the repo declares `start-build` and the user didn't ask to stop after the plan:
+
+1. Make sure `plan.md` and `review-log.md` are written in the design directory, and that the plan's "Guardrail impact" is filled in.
+2. Run `start-build` with the task's slug (for example `tools/agent/start_build.sh <slug>`), and use `--dry-run` first if you're unsure what it will do. It creates the feature branch and worktree, commits the design folder, and starts `/algo-build-loop <plan> --autonomous` in the background.
+3. Tell the user, in one or two lines, where the build runs and where its log is. Say that **no PR appears until the build is ready**: the build loop opens it through the repo's `open-pr` door only once the judge says PASS or a soft NEEDS_HUMAN. Then end your turn; the build runs on its own.
+
+Without `start-build`, or when the user chose to stop after the plan, end at Step 4 and suggest `/algo-build-loop <path to plan.md>` in one line.
 
 ## Notes on cost and judgment
 

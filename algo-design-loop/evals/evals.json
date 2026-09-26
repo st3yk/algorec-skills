@@ -3,15 +3,24 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "I want to write code for a recommendation system for short-form video content (like a For You feed). I know very little about how these algorithms work. Help me design one from scratch — research the real approaches and give me a step-by-step plan.",
+      "prompt": "I want to write code for a recommendation system for short-form video content (like a For You feed). I know very little about how these algorithms work. Help me design one from scratch \u2014 research the real approaches and give me a step-by-step plan.",
       "expected_output": "A plan.md with a researched comparison of viable approaches (e.g. candidate generation + ranking funnel, collaborative filtering, engagement-based ranking, cold-start handling), a chosen approach with rationale, and a step-by-step implementation plan. A review-log.md showing at least one adversarial review round with severity-tagged findings and what was changed. Should stop once a round comes back blocker=0, major=0.",
       "files": []
     },
     {
       "id": 2,
-      "prompt": "Design a rate limiter algorithm for our public API — we're expecting bursty traffic from a handful of large customers and need to be fair to smaller ones too. Stress-test the design before I build it.",
+      "prompt": "Design a rate limiter algorithm for our public API \u2014 we're expecting bursty traffic from a handful of large customers and need to be fair to smaller ones too. Stress-test the design before I build it.",
       "expected_output": "A plan.md comparing rate-limiting algorithms (token bucket, sliding window, leaky bucket, etc.) against the fairness/burstiness constraint, a chosen approach, and a step-by-step plan. review-log.md showing the adversarial reviewer catching at least one real issue (e.g. per-customer fairness under a shared bucket, clock-sync issues in distributed rate limiting) and the fix being applied.",
       "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "In this repo, design how to scale stage 2's clarity preference with |s| instead of switching it on as a step, then build it.",
+      "expected_output": "Reads AGENTS.md's 'Agent workflow' contract and NORTH_STAR.md promises; writes plan.md and review-log.md under the contract's design-dir (design/<slug>/); the plan has Verification (per-step failing checks) and Guardrail impact ('None.') sections; the reviewer prompt includes the promises and checks verification; after a SHIP verdict it runs the repo's start-build for the slug and tells the user no PR appears until the build is ready.",
+      "files": [
+        "AGENTS.md",
+        "NORTH_STAR.md"
+      ]
     }
   ]
 }
