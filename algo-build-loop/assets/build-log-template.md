@@ -2,17 +2,18 @@
 
 - **Plan**: {{path to plan.md}}
 - **Branch**: `{{feat/...}}` (base `{{main}}` @ `{{sha}}`)
-- **Build / test**: `{{build command}}` · `{{test command}}`
+- **Mode**: {{interactive | autonomous (started by start-build / --autonomous)}}
+- **Judge**: `{{verify-fast}}` · `{{verify}}` (from the repo's "Agent workflow" contract), or build / test: `{{build command}}` · `{{test command}}`
 
 This log is the session's memory. Read it first when resuming. Update "Current state" before every long-running command and at every milestone boundary.
 
 ## Current state
 
 - **Milestone / round**: {{M2, implementing (review round 0)}}
-- **Last green commit**: `{{sha}}`
+- **Last green commit**: `{{sha}}` · judge verdict there: {{PASS | NEEDS_HUMAN (soft/hard) | FAIL}} ({{report path}})
 - **Waiting on**: {{background build / nothing}}
 - **Next action**: {{one concrete step}}
-- **Blockers**: {{none | what and why}}
+- **Blockers**: {{none | what and why — in autonomous mode, every question you'd ask the user goes here}}
 
 ## Milestones
 
